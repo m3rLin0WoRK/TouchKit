@@ -77,7 +77,7 @@ public class TKPanRecognizer : TKAbstractGestureRecognizer
 		if (state == TKGestureRecognizerState.Began)
 		{
 			totalDeltaMovementInCm += deltaTranslationCm;
-			Debug.Log(totalDeltaMovementInCm);
+			//Debug.Log(totalDeltaMovementInCm);
 
 			if (Math.Abs(totalDeltaMovementInCm) >= _minDistanceToPanCm)
 			{
