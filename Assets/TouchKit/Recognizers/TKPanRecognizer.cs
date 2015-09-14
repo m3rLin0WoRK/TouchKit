@@ -12,17 +12,15 @@ public class TKPanRecognizer : TKAbstractGestureRecognizer
 	
 	public Vector2 deltaTranslation;
 	public float deltaTranslationCm;
-
-	private float totalDeltaMovementInCm = 0f;
-
 	public int minimumNumberOfTouches = 1;
 	public int maximumNumberOfTouches = 2;
-	
-	private Vector2 _previousLocation;
 
+	private float totalDeltaMovementInCm = 0f;
+	private Vector2 _previousLocation;
 	private float _minDistanceToPanCm;
 
-	public TKPanRecognizer(float minPanDistanceCm = 0.5f)
+
+	public TKPanRecognizer( float minPanDistanceCm = 0.5f )
 	{
 		_minDistanceToPanCm = minPanDistanceCm;
 	}
@@ -52,7 +50,7 @@ public class TKPanRecognizer : TKAbstractGestureRecognizer
 				}
 			} // end for
 			
-			if( _trackingTouches.Count >= minimumNumberOfTouches )
+			if( _trackingTouches.Count >= minimumNumberOfTouches && _trackingTouches.Count <= maximumNumberOfTouches )
 			{
 				_previousLocation = touchLocation();
 				if( state != TKGestureRecognizerState.RecognizedAndStillRecognizing )
@@ -69,24 +67,27 @@ public class TKPanRecognizer : TKAbstractGestureRecognizer
 	
 	internal override void touchesMoved( List<TKTouch> touches )
 	{
-		var currentLocation = touchLocation();
-		deltaTranslation = currentLocation - _previousLocation;
-		deltaTranslationCm = deltaTranslation.magnitude / TouchKit.instance.ScreenPixelsPerCm;
-		_previousLocation = currentLocation;
+		//do not engage with touch events if the number of touches is outside our desired constraints
+		if (_trackingTouches.Count >=minimumNumberOfTouches && _trackingTouches.Count <= maximumNumberOfTouches){
+			var currentLocation = touchLocation();
+			deltaTranslation = currentLocation - _previousLocation;
+			deltaTranslationCm = deltaTranslation.magnitude / TouchKit.instance.ScreenPixelsPerCm;
+			_previousLocation = currentLocation;
 
-		if (state == TKGestureRecognizerState.Began)
-		{
-			totalDeltaMovementInCm += deltaTranslationCm;
-			//Debug.Log(totalDeltaMovementInCm);
+			if (state == TKGestureRecognizerState.Began)
+			{
+				totalDeltaMovementInCm += deltaTranslationCm;
+				//Debug.Log(totalDeltaMovementInCm);
 
-			if (Math.Abs(totalDeltaMovementInCm) >= _minDistanceToPanCm)
+				if (Math.Abs(totalDeltaMovementInCm) >= _minDistanceToPanCm)
+				{
+					state = TKGestureRecognizerState.RecognizedAndStillRecognizing;
+				}
+			}
+			else
 			{
 				state = TKGestureRecognizerState.RecognizedAndStillRecognizing;
 			}
-		}
-		else
-		{
-			state = TKGestureRecognizerState.RecognizedAndStillRecognizing;
 		}
 	}
 	

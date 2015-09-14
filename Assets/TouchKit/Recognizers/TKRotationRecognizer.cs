@@ -14,11 +14,22 @@ public class TKRotationRecognizer : TKAbstractGestureRecognizer
 	public event Action<TKRotationRecognizer> gestureCompleteEvent;
 	
 	public float deltaRotation = 0;
-	public float minimumDeltaRotationToRecognize = 0;
+	public float minimumRotationToRecognize = 0;
 	
-	protected float _previousRotation;
-	
-	
+	protected float _previousRotation = 0;
+	protected float _firstRotation = 0; // first ever rotation angle when 2 fingers hit the screen
+	protected float _initialRotation = 0; // rotation angle when gesture is officially recognized
+
+	public float accumulatedRotation
+	{
+		get
+		{
+			if( _trackingTouches.Count == 2 )
+				return Mathf.DeltaAngle( angleBetweenPoints( _trackingTouches[0].position, _trackingTouches[1].position ), _initialRotation );
+			return 0;
+		}
+	}
+
 	/// <summary>
 	/// this is public due to its usefulness elsewhere. it should probably move to a helper class.
 	/// </summary>
@@ -65,9 +76,17 @@ public class TKRotationRecognizer : TKAbstractGestureRecognizer
 			
 			if( _trackingTouches.Count == 2 )
 			{
-				deltaRotation = 0;
-				_previousRotation = angleBetweenPoints( _trackingTouches[0].position, _trackingTouches[1].position );
-				state = TKGestureRecognizerState.Began;
+				if( minimumRotationToRecognize == 0 )
+				{
+					deltaRotation = 0;
+					_previousRotation = angleBetweenPoints( _trackingTouches[0].position, _trackingTouches[1].position );
+					state = TKGestureRecognizerState.Began;
+				}
+				else
+				{
+					// gesture cannot be recognized until the the rotation angle exceeds the minimum threshold
+					_firstRotation = angleBetweenPoints( _trackingTouches[0].position, _trackingTouches[1].position );
+				}
 			}
 		}
 		
@@ -77,6 +96,22 @@ public class TKRotationRecognizer : TKAbstractGestureRecognizer
 	
 	internal override void touchesMoved( List<TKTouch> touches )
 	{
+		// if the gesture has passed the minimum delta rotation threshold, begin officially recognizing the gesture
+		if( state == TKGestureRecognizerState.Possible && _trackingTouches.Count == 2 )
+		{
+			var cr = angleBetweenPoints( _trackingTouches[0].position, _trackingTouches[1].position );
+			var delta = Mathf.Abs( Mathf.DeltaAngle( cr, _firstRotation ) );
+
+			if( delta > minimumRotationToRecognize )
+			{
+				_initialRotation = cr; // the starting rotation when the gesture was first recognized
+
+				deltaRotation = 0;
+				_previousRotation = angleBetweenPoints( _trackingTouches[0].position, _trackingTouches[1].position );
+				state = TKGestureRecognizerState.Began;
+			}
+		}
+
 		if( state == TKGestureRecognizerState.RecognizedAndStillRecognizing || state == TKGestureRecognizerState.Began )
 		{
 			var currentRotation = angleBetweenPoints( _trackingTouches[0].position, _trackingTouches[1].position );
@@ -112,6 +147,7 @@ public class TKRotationRecognizer : TKAbstractGestureRecognizer
 		else
 		{
 			state = TKGestureRecognizerState.FailedOrEnded;
+			_initialRotation = 0;
 		}
 	}
 	
