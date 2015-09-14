@@ -19,7 +19,14 @@ public class TKPinchRecognizer : TKAbstractGestureRecognizer
 	{
 		return (Vector2.Distance(_trackingTouches[0].position, _trackingTouches[1].position) / TouchKit.instance.ScreenPixelsPerCm);
 	}
-	
+
+	public Vector2 centerOfTrackingTouches() {
+		if (_trackingTouches.Count == 2) {
+			return  Vector2.Lerp(_trackingTouches[0].position, _trackingTouches[1].position, 0.5f);
+		} else {
+			return Vector2.zero;
+		}
+	}
 	
 	internal override void fireRecognizedEvent()
 	{
