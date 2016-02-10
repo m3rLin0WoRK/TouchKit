@@ -18,6 +18,8 @@ public class TKTapRecognizer : TKAbstractGestureRecognizer
 
 	private float _touchBeganTime;
 
+	private int _preformedTapsCount = 0;
+
 	public TKTapRecognizer() : this(0.5f, 1f)
 	{ }
 
@@ -37,6 +39,11 @@ public class TKTapRecognizer : TKAbstractGestureRecognizer
 
 	internal override bool touchesBegan( List<TKTouch> touches )
 	{
+		if (Time.time > _touchBeganTime + _maxDurationForTapConsideration && _preformedTapsCount !=  0 && _preformedTapsCount < numberOfTapsRequired)
+		{
+			state = TKGestureRecognizerState.FailedOrEnded;
+		}
+
 		if( state == TKGestureRecognizerState.Possible )
 		{
 			for( int i = 0; i < touches.Count; i++ )
@@ -54,6 +61,7 @@ public class TKTapRecognizer : TKAbstractGestureRecognizer
 			if( _trackingTouches.Count == numberOfTouchesRequired )
 			{
 				_touchBeganTime = Time.time;
+				_preformedTapsCount = 0;
 				state = TKGestureRecognizerState.Began;
 
 				return true;
@@ -86,8 +94,14 @@ public class TKTapRecognizer : TKAbstractGestureRecognizer
 
 	internal override void touchesEnded( List<TKTouch> touches )
 	{
-		if( state == TKGestureRecognizerState.Began && ( Time.time <= _touchBeganTime + _maxDurationForTapConsideration ) )
-			state = TKGestureRecognizerState.Recognized;
+		if (state == TKGestureRecognizerState.Began && (Time.time <= _touchBeganTime + _maxDurationForTapConsideration))
+		{
+			++_preformedTapsCount;
+			if (_preformedTapsCount == numberOfTapsRequired)
+			{
+				state = TKGestureRecognizerState.Recognized;
+			}
+		}
 		else
 			state = TKGestureRecognizerState.FailedOrEnded;
 	}
