@@ -54,7 +54,6 @@ public class TKDragAndDropRecognizer : TKAbstractGestureRecognizer
 
 	internal override bool touchesBegan( List<TKTouch> touches )
 	{
-		Debug.Log ("Touche BEGAN");
 		// extra touches abort gesture
 		if (_trackingTouches.Count + touches.Count > maximumNumberOfTouches)
 		{
@@ -121,7 +120,6 @@ public class TKDragAndDropRecognizer : TKAbstractGestureRecognizer
 	
 	internal override void touchesEnded( List<TKTouch> touches )
 	{
-		Debug.Log ("Touche ENDED");
 		_endPoint = touchLocation();
 
 		// remove any completed touches
